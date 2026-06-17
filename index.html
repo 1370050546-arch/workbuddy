@@ -709,6 +709,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 <div id="toastContainer"></div>
 
 <script>
+// Global error boundary - prevent blank page on Android
+window.onerror = function(msg) { console.error('Page error:', msg); return true; };
+
 // ─── Settings ──────────────────────────────
 const DEFAULT = {
   startTime: '09:00',
