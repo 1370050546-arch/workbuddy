@@ -366,6 +366,31 @@ canvas#particles {
   gap: 10px;
 }
 .form-row .form-group { flex:1; }
+.salary-stepper {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.salary-stepper input {
+  flex: 1;
+  text-align: center;
+}
+.step-btn {
+  width: 48px;
+  height: 44px;
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.06);
+  color: var(--gold);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.step-btn:active {
+  background: rgba(240,192,96,0.2);
+}
 input[type="time"],
 input[type="number"],
 input[type="date"] {
@@ -632,7 +657,15 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     </div>
     <div class="form-group">
       <label>每日薪资（元）</label>
-      <input type="number" id="setSalary" min="1" step="1" placeholder="800">
+      <div class="salary-stepper">
+        <button class="step-btn" onclick="stepSalary(-100)">-100</button>
+        <input type="number" id="setSalary" min="1" step="100" placeholder="200" oninput="syncMonthlyFromDaily()">
+        <button class="step-btn" onclick="stepSalary(+100)">+100</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>月薪（元）— 按21.75天折算日薪</label>
+      <input type="number" id="setMonthlySalary" min="1" step="1" placeholder="输入月薪自动计算" oninput="syncDailyFromMonthly()">
     </div>
 
     <!-- Rest day config -->
@@ -727,7 +760,7 @@ const DEFAULT = {
   endTime: '18:00',
   lunchStart: '12:00',
   lunchEnd: '13:00',
-  dailySalary: 800,
+  dailySalary: 200,
   restMode: 'double',        // 'double'|'single'|'custom'|'fixed'
   customRestDays: [],        // for custom: day indices (0=Sun..6=Sat)
   fixedRestDays: 4,          // for fixed mode
@@ -1134,12 +1167,35 @@ let tempTheme = 'gold';
 
 const WEEKDAY_LABELS = ['日','一','二','三','四','五','六'];
 
+function stepSalary(delta) {
+  const input = document.getElementById('setSalary');
+  let val = parseInt(input.value, 10) || settings.dailySalary;
+  val = Math.max(1, val + delta);
+  input.value = val;
+  syncMonthlyFromDaily();
+}
+
+function syncMonthlyFromDaily() {
+  const daily = parseInt(document.getElementById('setSalary').value, 10);
+  if (daily > 0) {
+    document.getElementById('setMonthlySalary').value = Math.round(daily * 21.75);
+  }
+}
+
+function syncDailyFromMonthly() {
+  const monthly = parseFloat(document.getElementById('setMonthlySalary').value);
+  if (monthly > 0) {
+    document.getElementById('setSalary').value = Math.round(monthly / 21.75);
+  }
+}
+
 function openSettings() {
   document.getElementById('setStart').value = settings.startTime;
   document.getElementById('setEnd').value = settings.endTime;
   document.getElementById('setLunchStart').value = settings.lunchStart;
   document.getElementById('setLunchEnd').value = settings.lunchEnd;
   document.getElementById('setSalary').value = settings.dailySalary;
+  document.getElementById('setMonthlySalary').value = Math.round(settings.dailySalary * 21.75) || '';
 
   // Rest mode
   tempRestMode = settings.restMode;
