@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>上班赚钱搭子</title>
+<style>
+:root {
+  --bg: #0a0a14;
+  --gold: #f0c060;
+  --gold-bright: #ffd700;
+  --gold-soft: #c9a040;
+  --text: #e8e8ec;
+  --text-dim: #8888a0;
+  --card-bg: rgba(255,255,255,0.04);
+  --card-border: rgba(255,255,255,0.08);
+  --green: #4ade80;
+  --red: #f87171;
+  --blue: #60a5fa;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+canvas#particles {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Mascot + Status */
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+}
+.status-emoji {
+  font-size: 36px;
+  line-height: 1;
+  animation: bounce 2s ease-in-out infinite;
+}
+@keyframes bounce {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.status-text {
+  font-size: 15px;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+/* Slogan */
+.slogan {
+  text-align: center;
+  font-size: 13px;
+  color: var(--gold-soft);
+  letter-spacing: 0.15em;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+/* Clock */
+.clock {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  font-family: "SF Mono", "JetBrains Mono", "Menlo", monospace;
+}
+
+/* Earnings Card */
+.earnings-card {
+  text-align: center;
+  padding: 32px 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+.earnings-card::before {
+  content: '';
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: radial-gradient(ellipse at center, rgba(240,192,96,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.earnings-label {
+  font-size: 14px;
+  color: var(--text-dim);
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+}
+.earnings-amount {
+  font-size: 56px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--gold);
+  text-shadow: 0 0 40px rgba(240,192,96,0.3), 0 0 80px rgba(240,192,96,0.1);
+  position: relative;
+  z-index: 1;
+  font-variant-numeric: tabular-nums;
+  transition: text-shadow 0.5s;
+}
+.earnings-amount .decimal {
+  font-size: 32px;
+  font-weight: 500;
+  opacity: 0.8;
+}
+.earnings-amount.pulse {
+  text-shadow: 0 0 60px rgba(255,215,0,0.5), 0 0 120px rgba(240,192,96,0.2);
+}
+
+/* Progress */
+.progress-section {
+  padding: 0 4px;
+}
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.progress-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-soft), var(--gold-bright), var(--gold));
+  border-radius: 3px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0;
+  width: 16px; height: 100%;
+  background: var(--gold-bright);
+  border-radius: 3px;
+  filter: blur(4px);
+}
+
+/* Info row */
+.info-row {
+  display: flex;
+  gap: 2px;
+  font-size: 12px;
+  color: var(--text-dim);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.info-row span {
+  background: rgba(255,255,255,0.04);
+  padding: 4px 10px;
+  border-radius: 10px;
+}
+
+/* Monthly Card */
+.monthly-card {
+  padding: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.monthly-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.monthly-title {
+  font-size: 14px;
+  color: var(--text-dim);
+}
+.monthly-amount {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.monthly-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.stat-chip {
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  color: var(--text-dim);
+}
+.stat-chip strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Buttons */
+.btn-row {
+  display: flex;
+  gap: 10px;
+}
+.btn {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  backdrop-filter: blur(20px);
+  transition: all 0.2s;
+  text-align: center;
+  font-family: inherit;
+}
+.btn:active {
+  background: rgba(255,255,255,0.1);
+  transform: scale(0.97);
+}
+.btn.primary {
+  background: linear-gradient(135deg, rgba(240,192,96,0.2), rgba(240,192,96,0.1));
+  border-color: rgba(240,192,96,0.3);
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s;
+}
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+.modal {
+  width: 100%;
+  max-width: 420px;
+  max-height: 80vh;
+  background: #181825;
+  border-radius: 24px 24px 0 0;
+  padding: 24px 20px 32px;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+.modal h3 {
+  font-size: 18px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: 600;
+}
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.form-row {
+  display: flex;
+  gap: 10px;
+}
+.form-row .form-group { flex:1; }
+input[type="time"],
+input[type="number"],
+input[type="date"] {
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+input:focus { border-color: var(--gold-soft); }
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+}
+
+/* Leave list */
+.batch-section {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+.batch-label {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 16px 0;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--card-border);
+}
+.divider span { padding: 0 12px; }
+
+.leave-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.leave-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px;
+  font-size: 14px;
+}
+.leave-item .date { color: var(--text); }
+.leave-item .weekday { color: var(--text-dim); font-size: 12px; }
+.leave-remove {
+  width: 28px; height: 28px;
+  border: none;
+  background: rgba(255,100,100,0.15);
+  color: var(--red);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.leave-remove:active { background: rgba(255,100,100,0.3); }
+
+.toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #181825;
+  border: 1px solid var(--card-border);
+  padding: 10px 20px;
+  border-radius: 14px;
+  font-size: 13px;
+  color: var(--text);
+  z-index: 200;
+  animation: toastIn 0.3s ease, toastOut 0.3s ease 1.7s forwards;
+  pointer-events: none;
+}
+@keyframes toastIn { from { opacity:0; transform:translateX(-50%) translateY(10px); } }
+@keyframes toastOut { to { opacity:0; transform:translateX(-50%) translateY(-10px); } }
+
+/* Responsive */
+@media (max-width: 400px) {
+  .earnings-amount { font-size: 44px; }
+  .earnings-amount .decimal { font-size: 26px; }
+  .container { padding: 16px 14px; gap: 14px; }
+}
+@media (min-width: 768px) {
+  .modal-overlay { align-items: center; }
+  .modal { border-radius: 24px; max-height: 70vh; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<div class="container">
+  <!-- Status -->
+  <div class="status-bar">
+    <div class="status-emoji" id="statusEmoji">💰</div>
+    <div class="status-text" id="statusText">加载中...</div>
+  </div>
+
+  <!-- Slogan -->
+  <div class="slogan">⚡ 把电充满，把尿喝淡 ⚡</div>
+
+  <!-- Clock -->
+  <div class="clock" id="clock">00:00:00</div>
+
+  <!-- Earnings -->
+  <div class="earnings-card">
+    <div class="earnings-label">今日已赚</div>
+    <div class="earnings-amount" id="earningsAmount">
+      ¥<span id="earningsInt">0</span><span class="decimal" id="earningsDec">.00</span>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-section">
+    <div class="progress-header">
+      <span id="progressLabel">今日进度</span>
+      <span id="progressPercent">0%</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+  </div>
+
+  <!-- Today info -->
+  <div class="info-row" id="todayInfo"></div>
+
+  <!-- Monthly -->
+  <div class="monthly-card">
+    <div class="monthly-header">
+      <span class="monthly-title" id="monthlyTitle">本月已赚</span>
+    </div>
+    <div class="monthly-amount" id="monthlyAmount">¥0</div>
+    <div class="monthly-stats" id="monthlyStats"></div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="btn-row">
+    <button class="btn" onclick="openSettings()">⚙️ 设置</button>
+    <button class="btn" onclick="openLeave()">📅 请假</button>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal" style="display:none" onclick="if(event.target===this)closeSettings()">
+  <div class="modal">
+    <h3>⚙️ 工作设置</h3>
+    <div class="form-row">
+      <div class="form-group">
+        <label>上班时间</label>
+        <input type="time" id="setStart">
+      </div>
+      <div class="form-group">
+        <label>下班时间</label>
+        <input type="time" id="setEnd">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>午休开始</label>
+        <input type="time" id="setLunchStart">
+      </div>
+      <div class="form-group">
+        <label>午休结束</label>
+        <input type="time" id="setLunchEnd">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>每日薪资（元）</label>
+      <input type="number" id="setSalary" min="1" step="1" placeholder="800">
+    </div>
+    <div class="btn-row" style="margin-top:20px">
+      <button class="btn" onclick="closeSettings()">取消</button>
+      <button class="btn primary" onclick="saveSettings()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Leave Modal -->
+<div class="modal-overlay" id="leaveModal" style="display:none" onclick="if(event.target===this)closeLeave()">
+  <div class="modal">
+    <h3>📅 请假管理</h3>
+
+    <!-- Batch range -->
+    <div class="batch-section">
+      <div class="batch-label">📆 批量添加（日期区间）</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>开始日期</label>
+          <input type="date" id="leaveDateFrom">
+        </div>
+        <div class="form-group">
+          <label>结束日期</label>
+          <input type="date" id="leaveDateTo">
+        </div>
+      </div>
+      <button class="btn primary" onclick="addLeaveRange()" style="width:100%;margin-top:4px">批量添加</button>
+    </div>
+
+    <div class="divider"><span>或单独添加</span></div>
+
+    <div class="form-row" style="align-items:end">
+      <div class="form-group" style="flex:1">
+        <label>选择日期</label>
+        <input type="date" id="leaveDateInput">
+      </div>
+      <div class="form-group" style="flex:0">
+        <button class="btn primary" onclick="addLeaveDay()" style="padding:12px 20px">添加</button>
+      </div>
+    </div>
+    <div class="leave-list" id="leaveList"></div>
+    <div style="margin-top:16px">
+      <button class="btn" onclick="closeLeave()" style="width:100%">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div id="toastContainer"></div>
+
+<script>
+// ─── Settings ──────────────────────────────
+const DEFAULT = {
+  startTime: '09:00',
+  endTime: '18:00',
+  lunchStart: '12:00',
+  lunchEnd: '13:00',
+  dailySalary: 800,
+};
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('workBuddySettings'));
+    if (s && s.dailySalary > 0) return s;
+  } catch(e) {}
+  return { ...DEFAULT };
+}
+
+function saveToLocal(settings) {
+  localStorage.setItem('workBuddySettings', JSON.stringify(settings));
+}
+
+function loadLeaveDays() {
+  try {
+    const arr = JSON.parse(localStorage.getItem('workBuddyLeaveDays'));
+    if (Array.isArray(arr)) return arr;
+  } catch(e) {}
+  return [];
+}
+
+function saveLeaveDays(arr) {
+  localStorage.setItem('workBuddyLeaveDays', JSON.stringify(arr));
+}
+
+let settings = loadSettings();
+let leaveDays = loadLeaveDays();
+
+// ─── Date Helpers ──────────────────────────
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+
+function timeToMin(t) {
+  const [h,m] = t.split(':').map(Number);
+  return h*60 + m;
+}
+
+function isWeekday(date) {
+  const d = date.getDay();
+  return d !== 0 && d !== 6;
+}
+
+// ─── Earnings Calculation ──────────────────
+function calcToday() {
+  const now = new Date();
+  const day = now.getDay();
+  const today = todayStr();
+
+  // Weekend
+  if (!isWeekday(now)) {
+    return { earned: 0, isWorking: false, reason: 'weekend', progress: 0 };
+  }
+  // Leave day
+  if (leaveDays.includes(today)) {
+    return { earned: 0, isWorking: false, reason: 'leave', progress: 0 };
+  }
+
+  const startMin = timeToMin(settings.startTime);
+  const endMin = timeToMin(settings.endTime);
+  const lunchStartMin = timeToMin(settings.lunchStart);
+  const lunchEndMin = timeToMin(settings.lunchEnd);
+  const lunchDur = lunchEndMin - lunchStartMin;
+  const totalWorkMin = (endMin - startMin) - lunchDur;
+
+  if (totalWorkMin <= 0) return { earned: 0, isWorking: false, reason: 'invalid', progress: 0 };
+
+  const nowMin = now.getHours()*60 + now.getMinutes() + now.getSeconds()/60;
+
+  if (nowMin < startMin) {
+    return { earned: 0, isWorking: false, reason: 'before_work', progress: 0 };
+  }
+  if (nowMin >= endMin) {
+    return { earned: settings.dailySalary, isWorking: false, reason: 'after_work', progress: 1 };
+  }
+
+  let workedMin = nowMin - startMin;
+  // During lunch
+  if (nowMin > lunchStartMin) {
+    if (nowMin >= lunchEndMin) {
+      workedMin -= lunchDur;
+    } else {
+      workedMin = lunchStartMin - startMin; // freeze at pre-lunch
+      return {
+        earned: (workedMin / totalWorkMin) * settings.dailySalary,
+        isWorking: false,
+        reason: 'during_lunch',
+        progress: workedMin / totalWorkMin,
+      };
+    }
+  }
+
+  const progress = Math.min(workedMin / totalWorkMin, 1);
+  return {
+    earned: progress * settings.dailySalary,
+    isWorking: true,
+    reason: 'working',
+    progress,
+  };
+}
+
+function countPastWorkdays() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const today = now.getDate();
+  let count = 0;
+  for (let d = 1; d < today; d++) {
+    const dt = new Date(y, m, d);
+    if (!isWeekday(dt)) continue;
+    const ds = y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    if (!leaveDays.includes(ds)) count++;
+  }
+  return count;
+}
+
+function countMonthWorkdays() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const lastDay = new Date(y, m+1, 0).getDate();
+  let count = 0;
+  for (let d = 1; d <= lastDay; d++) {
+    if (isWeekday(new Date(y, m, d))) count++;
+  }
+  return count;
+}
+
+// ─── Status Message ────────────────────────
+function getStatus(reason, progress) {
+  const map = {
+    weekend:       { e:'🏖️', t:'周末愉快，好好休息～' },
+    leave:         { e:'🌴', t:'请假休息，放空自己～' },
+    before_work:   { e:'🌅', t:'准备开启赚钱的一天！' },
+    after_work:    { e:'🎉', t:'下班！今天辛苦啦～' },
+    during_lunch:  { e:'🍜', t:'午休中，好好吃饭～' },
+    invalid:       { e:'⚠️', t:'工作时间设置有误，去改改吧～' },
+  };
+  if (map[reason]) return map[reason];
+  if (progress < 0.25) return { e:'☀️', t:'早上好，元气满满！' };
+  if (progress < 0.5)  return { e:'💪', t:'渐入佳境，继续冲！' };
+  if (progress < 0.75) return { e:'☕', t:'下午加油，钱在向你招手～' };
+  if (progress < 0.9)  return { e:'🏁', t:'快下班了，冲刺！' };
+  return { e:'💰', t:'认真赚钱中...' };
+}
+
+// ─── Particles ─────────────────────────────
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let W, H;
+
+function resizeCanvas() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+class Particle {
+  constructor() {
+    this.reset(true);
+  }
+  reset(init) {
+    this.x = Math.random() * W;
+    this.y = init ? Math.random() * H : H + 10;
+    this.size = Math.random() * 2.5 + 1;
+    this.speedY = -(Math.random() * 0.6 + 0.2);
+    this.speedX = (Math.random() - 0.5) * 0.4;
+    this.opacity = Math.random() * 0.4 + 0.15;
+    this.life = 1;
+    this.decay = Math.random() * 0.002 + 0.0015;
+  }
+  update() {
+    this.x += this.speedX;
+    this.y += this.speedY;
+    this.life -= this.decay;
+    if (this.life <= 0 || this.y < -10 || this.x < -10 || this.x > W + 10) {
+      this.reset(false);
+    }
+  }
+  draw() {
+    const alpha = this.opacity * this.life;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(240,192,96,${alpha})`;
+    ctx.fill();
+  }
+}
+
+// Init particles
+for (let i = 0; i < 40; i++) {
+  particles.push(new Particle());
+}
+
+function updateParticles() {
+  ctx.clearRect(0, 0, W, H);
+  for (const p of particles) {
+    p.update();
+    p.draw();
+  }
+}
+
+// ─── UI Update ─────────────────────────────
+let displayValue = 0;
+
+function updateUI() {
+  const now = new Date();
+
+  // Clock
+  document.getElementById('clock').textContent =
+    now.toLocaleTimeString('zh-CN', { hour12: false });
+
+  // Today calc
+  const t = calcToday();
+
+  // Smoothed display value
+  if (!t.isWorking && t.reason !== 'working') {
+    displayValue = t.earned;
+  } else {
+    const speed = 0.08;
+    displayValue += (t.earned - displayValue) * speed;
+    // Snap if very close
+    if (Math.abs(t.earned - displayValue) < 0.001) displayValue = t.earned;
+  }
+
+  // Format
+  const intPart = Math.floor(displayValue);
+  const decPart = (displayValue - intPart).toFixed(2).substring(1); // ".XX"
+
+  document.getElementById('earningsInt').textContent = intPart.toLocaleString();
+  document.getElementById('earningsDec').textContent = decPart;
+
+  // Pulse effect when working
+  const amountEl = document.getElementById('earningsAmount');
+  if (t.isWorking) {
+    amountEl.classList.add('pulse');
+  } else {
+    amountEl.classList.remove('pulse');
+  }
+
+  // Progress bar
+  const pct = Math.round(t.progress * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPercent').textContent = pct + '%';
+  document.getElementById('progressLabel').textContent = t.isWorking ? '今日进度' :
+    t.reason === 'after_work' ? '已完成' :
+    t.reason === 'during_lunch' ? '午休中' : '今日进度';
+
+  // Status
+  const st = getStatus(t.reason, t.progress);
+  document.getElementById('statusEmoji').textContent = st.e;
+  document.getElementById('statusText').textContent = st.t;
+
+  // Today info
+  const infoEl = document.getElementById('todayInfo');
+  infoEl.innerHTML =
+    `<span>🕘 ${settings.startTime}-${settings.endTime}</span>` +
+    `<span>🍜 ${settings.lunchStart}-${settings.lunchEnd}</span>` +
+    `<span>💵 ¥${settings.dailySalary}/天</span>`;
+
+  // Monthly
+  const pastDays = countPastWorkdays();
+  const isTodayWorking = isWeekday(now) && !leaveDays.includes(todayStr());
+  const todayEarned = isTodayWorking ? Math.min(displayValue, settings.dailySalary) : 0;
+  const monthEarned = pastDays * settings.dailySalary + todayEarned;
+  const totalWorkdays = countMonthWorkdays();
+  const leaveCount = leaveDays.filter(d => {
+    const dt = new Date(d);
+    return dt.getFullYear() === now.getFullYear() && dt.getMonth() === now.getMonth();
+  }).length;
+  const projectedFull = (totalWorkdays - leaveCount) * settings.dailySalary;
+
+  document.getElementById('monthlyAmount').textContent = '¥' + Math.round(monthEarned).toLocaleString();
+  document.getElementById('monthlyStats').innerHTML =
+    `<span class="stat-chip">应出勤 <strong>${totalWorkdays}</strong> 天</span>` +
+    `<span class="stat-chip">已出勤 <strong>${pastDays + (isTodayWorking ? 1 : 0)}</strong> 天</span>` +
+    (leaveCount > 0 ? `<span class="stat-chip">请假 <strong>${leaveCount}</strong> 天</span>` : '') +
+    `<span class="stat-chip">预计本月 <strong>¥${projectedFull.toLocaleString()}</strong></span>`;
+
+  const monthName = now.getMonth() + 1;
+  document.getElementById('monthlyTitle').textContent = `${monthName}月已赚`;
+}
+
+// ─── Animation Loop ────────────────────────
+function loop() {
+  updateUI();
+  updateParticles();
+  requestAnimationFrame(loop);
+}
+
+// ─── Settings Modal ────────────────────────
+function openSettings() {
+  document.getElementById('setStart').value = settings.startTime;
+  document.getElementById('setEnd').value = settings.endTime;
+  document.getElementById('setLunchStart').value = settings.lunchStart;
+  document.getElementById('setLunchEnd').value = settings.lunchEnd;
+  document.getElementById('setSalary').value = settings.dailySalary;
+  document.getElementById('settingsModal').style.display = 'flex';
+}
+
+function closeSettings() {
+  document.getElementById('settingsModal').style.display = 'none';
+}
+
+function saveSettings() {
+  const startTime = document.getElementById('setStart').value;
+  const endTime = document.getElementById('setEnd').value;
+  const lunchStart = document.getElementById('setLunchStart').value;
+  const lunchEnd = document.getElementById('setLunchEnd').value;
+  const dailySalary = parseInt(document.getElementById('setSalary').value, 10);
+
+  if (!startTime || !endTime || !lunchStart || !lunchEnd) {
+    showToast('请填写所有时间字段');
+    return;
+  }
+  if (!dailySalary || dailySalary <= 0) {
+    showToast('请填写有效的日薪');
+    return;
+  }
+  if (timeToMin(endTime) <= timeToMin(startTime)) {
+    showToast('下班时间必须晚于上班时间');
+    return;
+  }
+  if (timeToMin(lunchEnd) <= timeToMin(lunchStart)) {
+    showToast('午休结束必须晚于开始');
+    return;
+  }
+  if (timeToMin(lunchStart) < timeToMin(startTime) || timeToMin(lunchEnd) > timeToMin(endTime)) {
+    showToast('午休时间需在上班时间内');
+    return;
+  }
+
+  settings = { startTime, endTime, lunchStart, lunchEnd, dailySalary };
+  saveToLocal(settings);
+  displayValue = calcToday().earned; // reset display
+  closeSettings();
+  showToast('设置已保存 ✅');
+}
+
+// ─── Leave Modal ───────────────────────────
+function openLeave() {
+  document.getElementById('leaveDateInput').value = '';
+  document.getElementById('leaveDateFrom').value = '';
+  document.getElementById('leaveDateTo').value = '';
+  renderLeaveList();
+  document.getElementById('leaveModal').style.display = 'flex';
+}
+
+function closeLeave() {
+  document.getElementById('leaveModal').style.display = 'none';
+}
+
+function addLeaveDay() {
+  const val = document.getElementById('leaveDateInput').value;
+  if (!val) { showToast('请选择日期'); return; }
+  if (leaveDays.includes(val)) { showToast('该日期已添加'); return; }
+  leaveDays.push(val);
+  leaveDays.sort();
+  saveLeaveDays(leaveDays);
+  displayValue = calcToday().earned;
+  renderLeaveList();
+  showToast('已添加请假：' + val);
+}
+
+function addLeaveRange() {
+  const fromVal = document.getElementById('leaveDateFrom').value;
+  const toVal = document.getElementById('leaveDateTo').value;
+  if (!fromVal || !toVal) { showToast('请选择开始和结束日期'); return; }
+
+  const from = new Date(fromVal + 'T00:00:00');
+  const to = new Date(toVal + 'T00:00:00');
+  if (to < from) { showToast('结束日期不能早于开始日期'); return; }
+
+  let added = 0;
+  const current = new Date(from);
+  while (current <= to) {
+    const ds = current.getFullYear() + '-' +
+      String(current.getMonth()+1).padStart(2,'0') + '-' +
+      String(current.getDate()).padStart(2,'0');
+    if (!leaveDays.includes(ds)) {
+      leaveDays.push(ds);
+      added++;
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  leaveDays.sort();
+  saveLeaveDays(leaveDays);
+  displayValue = calcToday().earned;
+  renderLeaveList();
+  document.getElementById('leaveDateFrom').value = '';
+  document.getElementById('leaveDateTo').value = '';
+  showToast(`已批量添加 ${added} 天请假`);
+}
+
+function removeLeaveDay(dateStr) {
+  leaveDays = leaveDays.filter(d => d !== dateStr);
+  saveLeaveDays(leaveDays);
+  displayValue = calcToday().earned;
+  renderLeaveList();
+}
+
+const WEEKDAY_NAMES = ['日','一','二','三','四','五','六'];
+
+function renderLeaveList() {
+  const container = document.getElementById('leaveList');
+  if (leaveDays.length === 0) {
+    container.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:20px;font-size:14px">暂无请假记录</div>';
+    return;
+  }
+  container.innerHTML = leaveDays.map(d => {
+    const dt = new Date(d + 'T00:00:00');
+    const wd = '周' + WEEKDAY_NAMES[dt.getDay()];
+    return `<div class="leave-item">
+      <span class="date">${d}</span>
+      <span class="weekday">${wd}</span>
+      <button class="leave-remove" onclick="removeLeaveDay('${d}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ─── Toast ─────────────────────────────────
+function showToast(msg) {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 2000);
+}
+
+// ─── First Run ─────────────────────────────
+if (!localStorage.getItem('workBuddySettings')) {
+  setTimeout(openSettings, 500);
+}
+
+// ─── Start Loop ────────────────────────────
+loop();
+
+// Recalculate on visibility change (wake from sleep)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    displayValue = calcToday().earned;
+  }
+});
+
+// Update every minute to refresh monthly stats
+setInterval(() => {
+  // force monthly recalc (past days count changes at midnight)
+}, 60_000);
+</script>
+
+</body>
+</html>
