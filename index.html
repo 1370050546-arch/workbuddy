@@ -175,13 +175,66 @@ canvas#particles {
   text-shadow: 0 0 40px rgba(240,192,96,0.3), 0 0 80px rgba(240,192,96,0.1);
   position: relative;
   z-index: 1;
-  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
   transition: text-shadow 0.5s;
 }
-.earnings-amount .decimal {
-  font-size: 32px;
+.earnings-amount .flip-unit {
+  display: inline-block;
+  width: 32px;
+  height: 56px;
+  position: relative;
+  perspective: 80px;
+  vertical-align: bottom;
+  flex-shrink: 0;
+}
+.earnings-amount .flip-card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(240,192,96,0.08);
+  border-radius: 5px;
+  color: var(--gold);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+.earnings-amount .flip-card.top {
+  z-index: 2;
+  transform-origin: bottom center;
+  clip-path: inset(0 0 50% 0);
+}
+.earnings-amount .flip-card.btm {
+  z-index: 1;
+  transform-origin: top center;
+  clip-path: inset(50% 0 0 0);
+}
+.earnings-amount .flip-card.top.flipping {
+  animation: flipTop 0.35s ease-in forwards;
+}
+.earnings-amount .flip-card.btm.flipping {
+  animation: flipBtm 0.35s ease-out forwards;
+}
+@keyframes flipTop {
+  0%   { transform: rotateX(0deg); z-index: 2; }
+  100% { transform: rotateX(-90deg); z-index: 0; }
+}
+@keyframes flipBtm {
+  0%   { transform: rotateX(90deg); z-index: 0; }
+  100% { transform: rotateX(0deg); z-index: 1; }
+}
+.earnings-amount .flip-sep {
+  font-size: 36px;
   font-weight: 500;
-  opacity: 0.8;
+  opacity: 0.4;
+  margin: 0 1px;
+  color: var(--gold);
+  flex-shrink: 0;
 }
 .earnings-amount.pulse {
   text-shadow: 0 0 60px rgba(255,215,0,0.5), 0 0 120px rgba(240,192,96,0.2);
@@ -530,8 +583,8 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
 /* Responsive */
 @media (max-width: 400px) {
-  .earnings-amount { font-size: 44px; }
-  .earnings-amount .decimal { font-size: 26px; }
+  .earnings-amount .flip-unit { width: 26px; height: 46px; }
+  .earnings-amount .flip-sep { font-size: 28px; }
   .container { padding: 16px 14px; gap: 14px; }
 }
 @media (min-width: 768px) {
@@ -563,7 +616,6 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   <div class="earnings-card">
     <div class="earnings-label">今日已赚</div>
     <div class="earnings-amount" id="earningsAmount">
-      ¥<span id="earningsInt">0</span><span class="decimal" id="earningsDec">.00</span>
     </div>
   </div>
 
@@ -990,6 +1042,45 @@ function updateParticles() {
   } catch(e) { particlesEnabled = false; }
 }
 
+// ─── Flip Digit Renderer ───────────────────
+let prevDigits = [];
+
+function renderFlipDigits(text) {
+  const chars = [...text]; // handle multi-byte chars properly
+  const container = document.getElementById('earningsAmount');
+
+  // Build new HTML only for changed digits
+  let html = '';
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    const prev = prevDigits[i];
+    const isSep = ch === ',' || ch === '.' || ch === '¥';
+
+    if (isSep) {
+      html += `<span class="flip-sep">${ch}</span>`;
+    } else if (prev === ch) {
+      // Unchanged - reuse static display
+      html += `<span class="flip-unit"><span class="flip-card top">${ch}</span><span class="flip-card btm">${ch}</span></span>`;
+    } else {
+      // Changed - add flip animation classes
+      html += `<span class="flip-unit" data-new="${ch}" data-old="${prev||''}"><span class="flip-card top flipping">${prev||ch}</span><span class="flip-card btm flipping">${ch}</span></span>`;
+    }
+  }
+  container.innerHTML = html;
+  prevDigits = [...chars];
+
+  // Reset animation classes after animation completes
+  setTimeout(() => {
+    const units = container.querySelectorAll('.flip-unit[data-new]');
+    units.forEach(u => {
+      const newVal = u.dataset.new;
+      u.removeAttribute('data-new');
+      u.removeAttribute('data-old');
+      u.innerHTML = `<span class="flip-card top">${newVal}</span><span class="flip-card btm">${newVal}</span>`;
+    });
+  }, 400);
+}
+
 // ─── UI Update ─────────────────────────────
 let displayValue = 0;
 
@@ -1014,12 +1105,9 @@ function updateUI() {
     if (Math.abs(t.earned - displayValue) < 0.001) displayValue = t.earned;
   }
 
-  // Format
-  const intPart = Math.floor(displayValue);
-  const decPart = (displayValue - intPart).toFixed(2).substring(1); // ".XX"
-
-  document.getElementById('earningsInt').textContent = intPart.toLocaleString();
-  document.getElementById('earningsDec').textContent = decPart;
+  // Format with flip digits
+  const formatted = '¥' + Math.round(displayValue).toLocaleString() + (displayValue % 1).toFixed(2).substring(1);
+  renderFlipDigits(formatted);
 
   // Pulse effect when working
   const amountEl = document.getElementById('earningsAmount');
