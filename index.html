@@ -204,12 +204,14 @@ canvas#particles {
 }
 .earnings-amount .flip-unit .half.top {
   top: 0;
+  z-index: 3;
   border-radius: 5px 5px 0 0;
   border-bottom: 1px solid rgba(0,0,0,0.3);
   transform-origin: center bottom;
 }
 .earnings-amount .flip-unit .half.btm {
   bottom: 0;
+  z-index: 1;
   border-radius: 0 0 5px 5px;
   border-top: 1px solid rgba(255,255,255,0.05);
   transform-origin: center top;
@@ -230,10 +232,7 @@ canvas#particles {
 .earnings-amount .flip-unit .card.old .half.top { z-index: 3; }
 .earnings-amount .flip-unit .card.old .half.btm { z-index: 1; }
 .earnings-amount .flip-unit .card.new .half.top { z-index: 0; }
-.earnings-amount .flip-unit .card.new .half.btm {
-  z-index: 0;
-  transform: rotateX(90deg);
-}
+.earnings-amount .flip-unit .card.new .half.btm { z-index: 0; }
 
 /* Slow-motion flip animation */
 .earnings-amount .flip-unit .card.old .half.top.go {
