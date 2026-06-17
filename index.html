@@ -186,47 +186,70 @@ canvas#particles {
   width: 32px;
   height: 56px;
   position: relative;
-  perspective: 80px;
+  perspective: 120px;
   vertical-align: bottom;
   flex-shrink: 0;
 }
-.earnings-amount .flip-card {
+.earnings-amount .flip-unit .card {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(240,192,96,0.08);
-  border-radius: 5px;
-  color: var(--gold);
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+}
+.earnings-amount .flip-unit .half {
+  position: absolute;
+  left: 0; right: 0;
+  height: 50%;
+  overflow: hidden;
+  background: var(--card-bg);
   backface-visibility: hidden;
-  transform-style: preserve-3d;
 }
-.earnings-amount .flip-card.top {
-  z-index: 2;
-  transform-origin: bottom center;
-  clip-path: inset(0 0 50% 0);
+.earnings-amount .flip-unit .half.top {
+  top: 0;
+  border-radius: 5px 5px 0 0;
+  border-bottom: 1px solid rgba(0,0,0,0.3);
+  transform-origin: center bottom;
 }
-.earnings-amount .flip-card.btm {
-  z-index: 1;
-  transform-origin: top center;
-  clip-path: inset(50% 0 0 0);
+.earnings-amount .flip-unit .half.btm {
+  bottom: 0;
+  border-radius: 0 0 5px 5px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  transform-origin: center top;
 }
-.earnings-amount .flip-card.top.flipping {
-  animation: flipTop 0.35s ease-in forwards;
+.earnings-amount .flip-unit .half .d {
+  position: absolute;
+  left: 0; right: 0;
+  text-align: center;
+  font-weight: 700;
+  color: var(--gold);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
-.earnings-amount .flip-card.btm.flipping {
-  animation: flipBtm 0.35s ease-out forwards;
+.earnings-amount .flip-unit .half.top .d { bottom: 2px; }
+.earnings-amount .flip-unit .half.btm .d { top: -26px; }
+
+/* Z-index layers — old card sits on top of new card */
+.earnings-amount .flip-unit .card.old .half.top { z-index: 3; }
+.earnings-amount .flip-unit .card.old .half.btm { z-index: 1; }
+.earnings-amount .flip-unit .card.new .half.top { z-index: 0; }
+.earnings-amount .flip-unit .card.new .half.btm {
+  z-index: 0;
+  transform: rotateX(90deg);
 }
-@keyframes flipTop {
-  0%   { transform: rotateX(0deg); z-index: 2; }
-  100% { transform: rotateX(-90deg); z-index: 0; }
+
+/* Slow-motion flip animation */
+.earnings-amount .flip-unit .card.old .half.top.go {
+  animation: flipTopDown 0.6s ease-in forwards;
 }
-@keyframes flipBtm {
+.earnings-amount .flip-unit .card.new .half.btm.go {
+  animation: flipBtmUp 0.6s ease-out 0.3s forwards;
+}
+
+@keyframes flipTopDown {
+  0%   { transform: rotateX(0deg); z-index: 3; }
+  100% { transform: rotateX(-95deg); z-index: -1; }
+}
+@keyframes flipBtmUp {
   0%   { transform: rotateX(90deg); z-index: 0; }
-  100% { transform: rotateX(0deg); z-index: 1; }
+  100% { transform: rotateX(0deg); z-index: 2; }
 }
 .earnings-amount .flip-sep {
   font-size: 36px;
@@ -1045,11 +1068,14 @@ function updateParticles() {
 // ─── Flip Digit Renderer ───────────────────
 let prevDigits = [];
 
+function halfHTML(digit) {
+  return `<div class="half top"><div class="d">${digit}</div></div><div class="half btm"><div class="d">${digit}</div></div>`;
+}
+
 function renderFlipDigits(text) {
-  const chars = [...text]; // handle multi-byte chars properly
+  const chars = [...text];
   const container = document.getElementById('earningsAmount');
 
-  // Build new HTML only for changed digits
   let html = '';
   for (let i = 0; i < chars.length; i++) {
     const ch = chars[i];
@@ -1058,27 +1084,30 @@ function renderFlipDigits(text) {
 
     if (isSep) {
       html += `<span class="flip-sep">${ch}</span>`;
-    } else if (prev === ch) {
-      // Unchanged - reuse static display
-      html += `<span class="flip-unit"><span class="flip-card top">${ch}</span><span class="flip-card btm">${ch}</span></span>`;
+    } else if (prev === ch || prev === undefined) {
+      // Unchanged — single stable card
+      html += `<span class="flip-unit"><div class="card new">${halfHTML(ch)}</div></span>`;
     } else {
-      // Changed - add flip animation classes
-      html += `<span class="flip-unit" data-new="${ch}" data-old="${prev||''}"><span class="flip-card top flipping">${prev||ch}</span><span class="flip-card btm flipping">${ch}</span></span>`;
+      // Changed — two-card flip: old card top flips away, new card bottom flips up
+      html += `<span class="flip-unit" data-new="${ch}" data-old="${prev}">`
+        + `<div class="card new"><div class="half top"><div class="d">${ch}</div></div><div class="half btm go"><div class="d">${ch}</div></div></div>`
+        + `<div class="card old"><div class="half top go"><div class="d">${prev}</div></div><div class="half btm"><div class="d">${prev}</div></div></div>`
+        + `</span>`;
     }
   }
   container.innerHTML = html;
   prevDigits = [...chars];
 
-  // Reset animation classes after animation completes
+  // Cleanup after slow-motion flip completes (0.6s + 0.3s delay + buffer)
   setTimeout(() => {
     const units = container.querySelectorAll('.flip-unit[data-new]');
     units.forEach(u => {
       const newVal = u.dataset.new;
       u.removeAttribute('data-new');
       u.removeAttribute('data-old');
-      u.innerHTML = `<span class="flip-card top">${newVal}</span><span class="flip-card btm">${newVal}</span>`;
+      u.innerHTML = `<div class="card new">${halfHTML(newVal)}</div>`;
     });
-  }, 400);
+  }, 1000);
 }
 
 // ─── UI Update ─────────────────────────────
