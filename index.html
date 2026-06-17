@@ -923,16 +923,20 @@ function getSlogan(reason, progress) {
 
 // ─── Particles ─────────────────────────────
 const canvas = document.getElementById('particles');
-const ctx = canvas.getContext('2d');
+const ctx = canvas ? canvas.getContext('2d') : null;
 let particles = [];
 let W, H;
+let particlesEnabled = !!ctx;
 
 function resizeCanvas() {
-  W = canvas.width = window.innerWidth;
-  H = canvas.height = window.innerHeight;
+  if (!particlesEnabled) return;
+  try {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  } catch(e) { particlesEnabled = false; }
 }
 window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+if (particlesEnabled) resizeCanvas();
 
 class Particle {
   constructor() {
@@ -966,22 +970,28 @@ class Particle {
 }
 
 // Init particles
-for (let i = 0; i < 40; i++) {
-  particles.push(new Particle());
+if (particlesEnabled) {
+  try {
+    for (let i = 0; i < 40; i++) particles.push(new Particle());
+  } catch(e) { particlesEnabled = false; }
 }
 
 function updateParticles() {
-  ctx.clearRect(0, 0, W, H);
-  for (const p of particles) {
-    p.update();
-    p.draw();
-  }
+  if (!particlesEnabled) return;
+  try {
+    ctx.clearRect(0, 0, W, H);
+    for (const p of particles) {
+      p.update();
+      p.draw();
+    }
+  } catch(e) { particlesEnabled = false; }
 }
 
 // ─── UI Update ─────────────────────────────
 let displayValue = 0;
 
 function updateUI() {
+  try {
   const now = new Date();
 
   // Clock
@@ -1085,12 +1095,13 @@ function updateUI() {
 
   const monthName = now.getMonth() + 1;
   document.getElementById('monthlyTitle').textContent = `${monthName}月已赚`;
+  } catch(e) { console.error('updateUI error:', e); }
 }
 
 // ─── Animation Loop ────────────────────────
 function loop() {
-  updateUI();
-  updateParticles();
+  try { updateUI(); } catch(e) {}
+  try { updateParticles(); } catch(e) {}
   requestAnimationFrame(loop);
 }
 
